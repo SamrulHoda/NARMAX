@@ -4,97 +4,117 @@ import ForneyLab: unsafeCov, unsafeMean, unsafePrecision, VariateType,
 using Zygote
 include("util.jl")
 
-export ruleVariationalNARMAXOutNPPPPP,
-       ruleVariationalNARMAXIn1PNPPPP,
-       ruleVariationalNARMAXIn2PPNPPP,
-       ruleVariationalNARMAXIn3PPPNPP,
-	   ruleVariationalNARMAXIn4PPPPNP,
-	   ruleVariationalNARMAXIn5PPPPPN
+export ruleVariationalNARMAXOutNPPPPPP,
+       ruleVariationalNARMAXIn1PNPPPPP,
+       ruleVariationalNARMAXIn2PPNPPPP,
+       ruleVariationalNARMAXIn3PPPNPPP,
+	   ruleVariationalNARMAXIn4PPPPNPP,
+	   ruleVariationalNARMAXIn5PPPPPNP,
+	   ruleVariationalNARMAXIn6PPPPPPN,
 
 # Autoregression orders
 order_out = Nothing
 order_inp = Nothing
+order_prn = Nothing
 
 # Approximating point for Taylor series
 approxθ = 0.0
 
-function defineOrder(M::Int64, N::Int64)
-	global order_out, order_inp, approxθ
+function defineOrder(M::Int64, N::Int64, L::Int64)
+	global order_out, order_inp, order_prn, approxθ
 
 	# Autoregression order
     order_out = M
 	order_inp = N
+	order_inp = L
 end
 
 
-function ruleVariationalNARMAXOutNPPPPP(g :: Function,
-									    marg_y :: Nothing,
-									    marg_θ :: ProbabilityDistribution{Multivariate},
-                                        marg_x :: ProbabilityDistribution{Multivariate},
-                                        marg_z :: ProbabilityDistribution{Multivariate},
-                                        marg_u :: ProbabilityDistribution{Univariate},
-                                        marg_τ :: ProbabilityDistribution{Univariate})
+function ruleVariationalNARMAXOutNPPPPPP(g :: Function,
+									     marg_y :: Nothing,
+									     marg_θ :: ProbabilityDistribution{Multivariate},
+                                         marg_x :: ProbabilityDistribution{Multivariate},
+										 marg_u :: ProbabilityDistribution{Univariate},
+										 marg_z :: ProbabilityDistribution{Multivariate},
+										 marg_τ :: ProbabilityDistribution{Univariate},
+										 marg_γ :: ProbabilityDistribution{Multivariate})
 
 	return Nothing
 end
 
-function ruleVariationalNARMAXIn1PNPPPP(g :: Function,
-									    marg_y :: ProbabilityDistribution{Univariate},
-                                        marg_θ :: Nothing,
-									    marg_x :: ProbabilityDistribution{Multivariate},
-                                        marg_z :: ProbabilityDistribution{Multivariate},
-                                        marg_u :: ProbabilityDistribution{Univariate},
-                                        marg_τ :: ProbabilityDistribution{Univariate})
+function ruleVariationalNARMAXIn1PNPPPPP(g :: Function,
+									     marg_y :: ProbabilityDistribution{Univariate},
+                                         marg_θ :: Nothing,
+									     marg_x :: ProbabilityDistribution{Multivariate},
+										 marg_u :: ProbabilityDistribution{Univariate},
+										 marg_z :: ProbabilityDistribution{Multivariate},
+										 marg_τ :: ProbabilityDistribution{Univariate},
+										 marg_γ :: ProbabilityDistribution{Multivariate})
 
     return Nothing
 end
 
-function ruleVariationalNARMAXIn2PPNPPP(g :: Function,
-									  	marg_y :: ProbabilityDistribution{Univariate},
-									  	marg_θ :: ProbabilityDistribution{Multivariate},
-									  	marg_x :: Nothing,
-							  	      	marg_z :: ProbabilityDistribution{Multivariate},
-								      	marg_u :: ProbabilityDistribution{Univariate},
-                                      	marg_τ :: ProbabilityDistribution{Univariate})
+function ruleVariationalNARMAXIn2PPNPPPP(g :: Function,
+									  	 marg_y :: ProbabilityDistribution{Univariate},
+									  	 marg_θ :: ProbabilityDistribution{Multivariate},
+										 marg_x :: Nothing,
+										 marg_u :: ProbabilityDistribution{Univariate},  
+							  	      	 marg_z :: ProbabilityDistribution{Multivariate},
+										 marg_τ :: ProbabilityDistribution{Univariate},
+										 marg_u :: ProbabilityDistribution{Multivariate})
 
     return Nothing
 end
 
-function ruleVariationalNARMAXIn3PPPNPP(g :: Function,
-									  	marg_y :: ProbabilityDistribution{Univariate},
-									  	marg_θ :: ProbabilityDistribution{Multivariate},
-									  	marg_x :: ProbabilityDistribution{Multivariate},
-							  	      	marg_z :: Nothing,
-								      	marg_u :: ProbabilityDistribution{Univariate},
-                                      	marg_τ :: ProbabilityDistribution{Univariate})
+function ruleVariationalNARMAXIn3PPPNPPP(g :: Function,
+									  	 marg_y :: ProbabilityDistribution{Univariate},
+									  	 marg_θ :: ProbabilityDistribution{Multivariate},
+									  	 marg_x :: ProbabilityDistribution{Multivariate},
+										 marg_u :: Nothing,	
+										 marg_z :: ProbabilityDistribution{Multivariate},
+										 marg_τ :: ProbabilityDistribution{Univariate},
+										 marg_γ :: ProbabilityDistribution{Multivariate})
 
     return Nothing
 end
 
-function ruleVariationalNARMAXIn4PPPPNP(g :: Function,
-									  	marg_y :: ProbabilityDistribution{Univariate},
-									  	marg_θ :: ProbabilityDistribution{Multivariate},
-									  	marg_x :: ProbabilityDistribution{Multivariate},
-							  	      	marg_z :: ProbabilityDistribution{Multivariate},
-								      	marg_u :: Nothing,
-                                      	marg_τ :: ProbabilityDistribution{Univariate})
+function ruleVariationalNARMAXIn4PPPPNPP(g :: Function,
+									  	 marg_y :: ProbabilityDistribution{Univariate},
+									  	 marg_θ :: ProbabilityDistribution{Multivariate},
+										 marg_x :: ProbabilityDistribution{Multivariate},
+										 marg_u :: ProbabilityDistribution{Univariate}, 
+							  	      	 marg_z :: Nothing,
+										 marg_τ :: ProbabilityDistribution{Univariate},
+										 marg_γ :: ProbabilityDistribution{Multivariate})
 
     return Nothing
 end
 
-function ruleVariationalNARMAXIn5PPPPPN(g :: Function,
-									  	marg_y :: ProbabilityDistribution{Univariate},
-									  	marg_θ :: ProbabilityDistribution{Multivariate},
-									  	marg_x :: ProbabilityDistribution{Multivariate},
-							  	      	marg_z :: ProbabilityDistribution{Multivariate},
-								      	marg_u :: ProbabilityDistribution{Univariate},
-                                      	marg_τ :: Nothing)
+function ruleVariationalNARMAXIn5PPPPPNP(g :: Function,
+									  	 marg_y :: ProbabilityDistribution{Univariate},
+									  	 marg_θ :: ProbabilityDistribution{Multivariate},
+									  	 marg_x :: ProbabilityDistribution{Multivariate},
+							  	      	 marg_z :: ProbabilityDistribution{Multivariate},
+								      	 marg_u :: ProbabilityDistribution{Univariate},
+										 marg_τ :: Nothing,
+										 marg_γ :: ProbabilityDistribution{Multivariate})
 
     return Nothing
 end
 
+function ruleVariationalNARMAXIn6PPPPPPN(g :: Function,
+									 	 marg_y :: ProbabilityDistribution{Univariate},
+										 marg_θ :: ProbabilityDistribution{Multivariate},
+										 marg_x :: ProbabilityDistribution{Multivariate},
+	  									 marg_z :: ProbabilityDistribution{Multivariate},
+										 marg_u :: ProbabilityDistribution{Univariate},
+										 marg_τ :: ProbabilityDistribution{Univariate},
+  										 marg_γ :: Nothing)
 
-function collectNaiveVariationalNodeInbounds(node::NAutoregressiveMovingaverageX, entry::ScheduleEntry)
+	return Nothing
+end
+
+function collectNaiveVariationalNodeInbounds(node::NAutoregressiveMovingAverageX, entry::ScheduleEntry)
 	inbounds = Any[]
 
 	# Push function to calling signature (g needs to be defined in user scope)
