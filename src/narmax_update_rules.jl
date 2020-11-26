@@ -10,23 +10,23 @@ export ruleVariationalNARMAXOutNPPPPPP,
        ruleVariationalNARMAXIn3PPPNPPP,
 	   ruleVariationalNARMAXIn4PPPPNPP,
 	   ruleVariationalNARMAXIn5PPPPPNP,
-	   ruleVariationalNARMAXIn6PPPPPPN,
+	   ruleVariationalNARMAXIn6PPPPPPN
 
 # Autoregression orders
 order_out = Nothing
 order_inp = Nothing
-order_prn = Nothing
+order_res = Nothing
 
 # Approximating point for Taylor series
 approxθ = 0.0
 
-function defineOrder(M::Int64, N::Int64, L::Int64)
+function defineOrder(n_y::Int64, n_u::Int64, n_e::Int64)
 	global order_out, order_inp, order_prn, approxθ
 
 	# Autoregression order
-    order_out = M
-	order_inp = N
-	order_inp = L
+    order_out = n_y
+	order_inp = n_u
+	order_res = n_e
 end
 
 

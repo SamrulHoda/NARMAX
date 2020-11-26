@@ -24,11 +24,11 @@
                       :name          => VariationalNARMAXIn4PPPPNPP)
 
 @naiveVariationalRule(:node_type     => NAutoregressiveMovingAverageX,
-                      :outbound_type => Message{Gamma},
+                      :outbound_type => Message{GaussianWeightedMeanPrecision},
                       :inbound_types => (ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, Nothing, ProbabilityDistribution),
                       :name          => VariationalNARMAXIn5PPPPPNP)
 
 @naiveVariationalRule(:node_type     => NAutoregressiveMovingAverageX,
                       :outbound_type => Message{Gamma},
                       :inbound_types => (ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, ProbabilityDistribution, Nothing),
-                      :name          => VariationalNARMAXIn5PPPPPPN)
+                      :name          => VariationalNARMAXIn6PPPPPPN)
