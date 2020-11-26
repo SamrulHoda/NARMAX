@@ -45,7 +45,7 @@ mutable struct NAutoregressiveMovingAverageX <: SoftFactor
 
     function NAutoregressiveMovingAverageX(y, θ, x, u, z, r, τ; g::Function, id=generateId(NAutoregressiveMovingAverageX))
         @ensureVariables(y, θ, x, u, z, r, τ)
-        self = new(id, Array{Interface}(undef, 6), Dict{Symbol,Interface}(), g)
+        self = new(id, Array{Interface}(undef, 7), Dict{Symbol,Interface}(), g)
         addNode!(currentGraph(), self)
         self.i[:y] = self.interfaces[1] = associate!(Interface(self), y)
         self.i[:θ] = self.interfaces[2] = associate!(Interface(self), θ)

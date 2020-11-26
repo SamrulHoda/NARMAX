@@ -21,3 +21,24 @@ function mvdigamma(x, order)
     end
     return result
 end
+
+function polynomialExpansion(x, degree; input_delay=0, output_delay=0, error_delay=0)
+    "Generate polynomial basis expansion of a certain degree."
+
+    # Total length of basis vector
+    nk = input_delay + output_delay + error_delay + 1
+
+    # Start combinations vector
+    comb = collect(0:degree)';
+    for n = 2:nk
+
+        # Generate combinations
+        comb = [repeat(comb, outer=(1,nd+1)); kron(collect(0:nd)', ones(1,size(comb,2)))]
+        
+        # remove combinations which have a too high degree
+        mask = sum(comb, dims=1)[:] .<= nd
+        comb = comb[:, mask]
+    end
+
+    return [prod(x.^comb[:,k]) for k in 1:size(comb,2)]
+end
