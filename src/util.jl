@@ -9,9 +9,9 @@ function wMatrix(γ, order)
     return mW
 end
 
-function cholinv(M::AbstractMatrix)
-    return LinearAlgebra.inv(M)
-end
+# function cholinv(M::AbstractMatrix)
+#     return LinearAlgebra.inv(M)
+# end
 
 function mvdigamma(x, order)
     "Multivariate digamma function (see https://en.wikipedia.org/wiki/Multivariate_gamma_function)"
@@ -22,21 +22,21 @@ function mvdigamma(x, order)
     return result
 end
 
-function polynomialExpansion(x, degree; input_delay=0, output_delay=0, error_delay=0)
+function polynomialExpansion(x, degree::Int; input_delay::Int=0, output_delay::Int=0, error_delay::Int=0)
     "Generate polynomial basis expansion of a certain degree."
 
     # Total length of basis vector
     nk = input_delay + output_delay + error_delay + 1
 
     # Start combinations vector
-    comb = collect(0:degree)';
+    comb = Array{Float64,1}(0:degree);
     for n = 2:nk
 
         # Generate combinations
-        comb = [repeat(comb, outer=(1,nd+1)); kron(collect(0:nd)', ones(1,size(comb,2)))]
+        comb = [repeat(comb, outer=(1,degree+1)); kron(Array{Float64,1}(0:degree), ones(1,size(comb,2)))]
         
         # remove combinations which have a too high degree
-        mask = sum(comb, dims=1)[:] .<= nd
+        mask = sum(comb, dims=1)[:] .<= degree
         comb = comb[:, mask]
     end
 
