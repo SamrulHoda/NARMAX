@@ -29,11 +29,11 @@ function polynomialExpansion(x, degree::Int; input_delay::Int=0, output_delay::I
     nk = input_delay + output_delay + error_delay + 1
 
     # Start combinations vector
-    comb = Array{Float64,1}(0:degree);
+    comb = collect(0:degree)'
     for n = 2:nk
 
         # Generate combinations
-        comb = [repeat(comb, outer=(1,degree+1)); kron(Array{Float64,1}(0:degree), ones(1,size(comb,2)))]
+        comb = [repeat(comb, outer=(1,degree+1)); kron(collect(0:degree)', ones(1,size(comb,2)))]
         
         # remove combinations which have a too high degree
         mask = sum(comb, dims=1)[:] .<= degree
