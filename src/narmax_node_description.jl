@@ -21,6 +21,11 @@ Description:
 
     Assume y_t, x_t-1, u_t, z_t-1 and r_t-1 are observed and e_t ~ N(0, τ^-1).
 
+    f is assumed to be a linear product of coefficients θ and a basis expansion of inputs, 
+    outputs and residuals ϕ: 
+    
+        f(...) = θ'*ϕ(y_t-1, …, y_t-n_y, u_t, …, u_t-n_u, e_t, …, e_t-n_e)
+
 Interfaces:
 
     1. y (output)
@@ -33,7 +38,7 @@ Interfaces:
 
 Construction:
 
-    NAutoregressiveMovingAverageX(y, θ, x, u, z, r, τ, g=f, id=:some_id)
+    NAutoregressiveMovingAverageX(y, θ, x, u, z, r, τ, g=ϕ, id=:some_id)
 """
 
 mutable struct NAutoregressiveMovingAverageX <: SoftFactor
