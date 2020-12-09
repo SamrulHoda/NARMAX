@@ -20,14 +20,14 @@ export ruleVariationalNARMAXOutNPPPPPP,
 # # Approximating point for Taylor series
 # approxθ = 0.0
 
-function defineOrder(n_y::Int64, n_u::Int64, n_e::Int64)
-	global order_out, order_inp, order_res
+# function defineOrder(n_y::Int64, n_u::Int64, n_e::Int64)
+# 	global order_out, order_inp, order_res
 
-	# Autoregression order
-    order_out = n_y
-	order_inp = n_u
-	order_res = n_e
-end
+# 	# Autoregression order
+#     order_out = n_y
+# 	order_inp = n_u
+# 	order_res = n_e
+# end
 
 
 function ruleVariationalNARMAXOutNPPPPPP(g :: Function,
@@ -183,13 +183,12 @@ function ruleVariationalNARMAXIn6PPPPPPN(g :: Function,
 	# Update approximating point
 	# global approxθ = mθ
 
-	# Evaluate f at mθ
-	gx = g([mx; mu; mz; mr])
-	fθ = mθ'*gx
-
 	# Gradient of f evaluated at mθ
 	# Jθ = Zygote.gradient(g, mθ, mx, mu, mz, mr)[1]
-	Jθ = gx
+	Jθ = g([mx; mu; mz; mr])
+
+	# Evaluate f at mθ
+	fθ = mθ'*Jθ
 
 	# Update parameters
 	a = 3/2.
