@@ -199,7 +199,7 @@ function ruleVariationalNARMAXIn6PPPPPPN(g :: Function,
 end
 
 
-function collectNaiveVariationalNodeInbounds(node::NAutoregressiveMovingAverageX, entry::ScheduleEntry)
+function collectNaiveVariationalNodeInbounds(node::NAutoRegressiveMovingAverageX, entry::ScheduleEntry)
 	inbounds = Any[]
 
 	# Push function to calling signature (g needs to be defined in user scope)

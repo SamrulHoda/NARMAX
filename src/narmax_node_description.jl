@@ -3,12 +3,12 @@ using LinearAlgebra
 import ForneyLab: SoftFactor, @ensureVariables, generateId, addNode!, associate!,
                   averageEnergy, Interface, Variable, slug, ProbabilityDistribution,
                   differentialEntropy, unsafeLogMean, unsafeMean, unsafeCov, unsafePrecision, unsafeMeanCov
-export NAutoregressiveMovingAverageX, NARMAX
+export NAutoRegressiveMovingAverageX, NARMAX
 
 """
 Description:
 
-    A Nonlinear Autoregressive model with moving average and exogeneous input (NARMAX)
+    A Nonlinear AutoRegressive model with moving average and exogeneous input (NARMAX)
 
     y_t = f(y_t-1, …, y_t-n_y, u_t, …, u_t-n_u, e_t, …, e_t-n_e)
 
@@ -38,17 +38,17 @@ Interfaces:
 
 Construction:
 
-    NAutoregressiveMovingAverageX(y, θ, x, u, z, r, τ, g=ϕ, id=:some_id)
+    NAutoRegressiveMovingAverageX(y, θ, x, u, z, r, τ, g=ϕ, id=:some_id)
 """
 
-mutable struct NAutoregressiveMovingAverageX <: SoftFactor
+mutable struct NAutoRegressiveMovingAverageX <: SoftFactor
     id::Symbol
     interfaces::Vector{Interface}
     i::Dict{Symbol,Interface}
 
     g::Function # Scalar function between autoregression coefficients and state variable
 
-    function NAutoregressiveMovingAverageX(y, θ, x, u, z, r, τ; g::Function, id=generateId(NAutoregressiveMovingAverageX))
+    function NAutoRegressiveMovingAverageX(y, θ, x, u, z, r, τ; g::Function, id=generateId(NAutoRegressiveMovingAverageX))
         @ensureVariables(y, θ, x, u, z, r, τ)
         self = new(id, Array{Interface}(undef, 7), Dict{Symbol,Interface}(), g)
         addNode!(currentGraph(), self)
@@ -63,9 +63,9 @@ mutable struct NAutoregressiveMovingAverageX <: SoftFactor
     end
 end
 
-slug(::Type{NAutoregressiveMovingAverageX}) = "NARMAX"
+slug(::Type{NAutoRegressiveMovingAverageX}) = "NARMAX"
 
-function averageEnergy(::Type{NAutoregressiveMovingAverageX},
+function averageEnergy(::Type{NAutoRegressiveMovingAverageX},
                        marg_y::ProbabilityDistribution{Univariate},
                        marg_θ::ProbabilityDistribution{Multivariate},
                        marg_x::ProbabilityDistribution{Multivariate},
