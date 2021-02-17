@@ -2,7 +2,9 @@ using ForneyLab
 using LinearAlgebra
 import ForneyLab: SoftFactor, @ensureVariables, generateId, addNode!, associate!,
                   averageEnergy, Interface, Variable, slug, ProbabilityDistribution,
-                  differentialEntropy, unsafeLogMean, unsafeMean, unsafeCov, unsafePrecision, unsafeMeanCov
+                  differentialEntropy, unsafeLogMean, unsafeMean, unsafeCov, unsafePrecision, unsafeMeanCov,
+                  collectAverageEnergyInbounds, localEdgeToRegion, ultimatePartner, region, Region, isClamped, currentInferenceAlgorithm
+import SpecialFunctions: digamma
 export NAutoRegressiveMovingAverageX, NARMAX
 
 """
@@ -66,6 +68,7 @@ end
 slug(::Type{NAutoRegressiveMovingAverageX}) = "NARMAX"
 
 function averageEnergy(::Type{NAutoRegressiveMovingAverageX},
+                       g::Function,
                        marg_y::ProbabilityDistribution{Univariate},
                        marg_θ::ProbabilityDistribution{Multivariate},
                        marg_x::ProbabilityDistribution{Multivariate},
@@ -74,6 +77,52 @@ function averageEnergy(::Type{NAutoRegressiveMovingAverageX},
                        marg_r::ProbabilityDistribution{Multivariate},
                        marg_τ::ProbabilityDistribution{Univariate})
 
-    error("not implemented yet")
+    # Extract moments of beliefs
+    mθ,Vθ = unsafeMeanCov(marg_θ)
+    my = unsafeMean(marg_y)
+    mx = unsafeMean(marg_x)
+    mu = unsafeMean(marg_u)
+    mz = unsafeMean(marg_z)
+    mr = unsafeMean(marg_r)
+    mτ = unsafeMean(marg_τ)  
+    aτ = marg_τ.params[:a]
+    bτ = marg_τ.params[:b]
 
+    # Gradient of f evaluated at mθ
+    # Jθ = Zygote.gradient(g, mθ, mx, mu, mz, mr)[1]
+    Jθ = g([mx; mu; mz; mr])
+
+    # Evaluate f at mθ
+    fθ = mθ'*Jθ
+
+    return 1/2*log(2*pi) - 1/2*(digamma(aτ)-log(bτ)) + 1/2*mτ*(my^2 - 2*my*fθ + fθ^2 + Jθ'*Vθ*Jθ)
+end
+
+function collectAverageEnergyInbounds(node::NAutoRegressiveMovingAverageX)
+    inbounds = Any[]
+
+    # Push function to calling signature (g needs to be defined in user scope)
+    push!(inbounds, Dict{Symbol, Any}(:g => node.g, :keyword => false))
+
+    local_edge_to_region = localEdgeToRegion(node)
+
+    encountered_regions = Region[] # Keep track of encountered regions
+    for node_interface in node.interfaces
+        inbound_interface = ultimatePartner(node_interface)
+        current_region = region(node_interface.node, node_interface.edge)
+
+        if isClamped(inbound_interface)
+            # Hard-code marginal of constant node in schedule
+            push!(inbounds, assembleClamp!(copy(inbound_interface.node), ProbabilityDistribution)) # Copy Clamp before assembly to prevent overwriting dist_or_msg field
+        elseif !(current_region in encountered_regions)
+            # Collect marginal entry from marginal dictionary (if marginal entry is not already accepted)
+            target = local_edge_to_region[node_interface.edge]
+            current_inference_algorithm = currentInferenceAlgorithm()
+            push!(inbounds, current_inference_algorithm.target_to_marginal_entry[target])
+        end
+
+        push!(encountered_regions, current_region)
+    end
+
+    return inbounds
 end

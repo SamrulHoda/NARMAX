@@ -1,16 +1,17 @@
 "Utility functions"
 
-import ForneyLab: cholinv
+using LinearAlgebra
 import SpecialFunctions: digamma
+
+function cholinv(M::AbstractMatrix)
+    return LinearAlgebra.inv(M + 1e-8*Matrix{Float64}(I,size(M)))
+    # return LinearAlgebra.inv(M)
+end
 
 function wMatrix(γ, order)
     mW = 1e8*Matrix{Float64}(I, order, order)
     mW[end, end] = γ
     return mW
-end
-
-function cholinv(M::AbstractMatrix)
-    return LinearAlgebra.inv(M)
 end
 
 function mvdigamma(x, order)
