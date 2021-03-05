@@ -2,6 +2,7 @@ import LinearAlgebra: I, tr, inv
 import ForneyLab: unsafeCov, unsafeMean, unsafePrecision, VariateType,
 				  collectNaiveVariationalNodeInbounds, assembleClamp!, ultimatePartner
 # using Zygote
+
 include("util.jl")
 
 export ruleVariationalNARMAXOutNPPPPPP,
@@ -12,22 +13,8 @@ export ruleVariationalNARMAXOutNPPPPPP,
 	   ruleVariationalNARMAXIn5PPPPPNP,
 	   ruleVariationalNARMAXIn6PPPPPPN
 
-# # Autoregression orders
-# order_out = 0
-# order_inp = 0
-# order_res = 0
-
 # # Approximating point for Taylor series
 # approxθ = 0.0
-
-# function defineOrder(n_y::Int64, n_u::Int64, n_e::Int64)
-# 	global order_out, order_inp, order_res
-
-# 	# Autoregression order
-#     order_out = n_y
-# 	order_inp = n_u
-# 	order_res = n_e
-# end
 
 
 function ruleVariationalNARMAXOutNPPPPPP(g :: Function,
@@ -47,17 +34,15 @@ function ruleVariationalNARMAXOutNPPPPPP(g :: Function,
 	mr = unsafeMean(marg_r)
 	mτ = unsafeMean(marg_τ)
 
-	# Set order
-	# n_y = dims(marg_x)
-	# n_u = dims(marg_z)
-	# n_e = dims(marg_r)
-	# defineOrder(n_y, n_u, n_e)
-
 	# # Update approximating point
 	# global approxθ = mθ
 
+	# Gradient of function g evaluated at mθ
+	# Jθ = Zygote.gradient(g, approxθ, mx, mu, mz, mr)[1]
+	Jθ = g([mx; mu; mz; mr])
+
 	# Evaluate f at mθ
-	fθ = mθ'*g([mx; mu; mz; mr])
+	fθ = mθ'*Jθ
 
 	# Set outgoing message
 	return Message(Univariate, GaussianMeanPrecision, m=fθ, w=mτ)
@@ -80,14 +65,8 @@ function ruleVariationalNARMAXIn1PNPPPPP(g :: Function,
 	mr = unsafeMean(marg_r)
 	mτ = unsafeMean(marg_τ)
 
-	# Set order
-	# n_y = dims(marg_x)
-	# n_u = dims(marg_z)
-	# n_e = dims(marg_r)
-	# defineOrder(n_y, n_u, n_e)
-
-	# Jacobian of f evaluated at mθ
-	# Jθ = Zygote.gradient(g, approxθ, mx, mu, mz, mr)[1]
+	# Gradient of function g evaluated at mθ
+	# Jθ = Zygote.gradient(g, mθ, mx, mu, mz, mr)[1]
 	Jθ = g([mx; mu; mz; mr])
 
 	# Update parameters
@@ -95,7 +74,7 @@ function ruleVariationalNARMAXIn1PNPPPPP(g :: Function,
 	ϕ = mτ*my*Jθ
 
 	# Regularize matrix to ensure invertibility
-	# reg = 1e-8*Matrix{Float64}(I, size(Φ))
+	Φ += 1e-8*Matrix{Float64}(I, size(Φ))
 
 	# Update approximating point
 	# global approxθ = inv(Φ + reg)*ϕ
@@ -174,16 +153,10 @@ function ruleVariationalNARMAXIn6PPPPPPN(g :: Function,
 	mr = unsafeMean(marg_r)
 	Vθ = unsafeCov(marg_θ)
 
-	# Set order
-	# n_y = dims(marg_x)
-	# n_u = dims(marg_z)
-	# n_e = dims(marg_r)
-	# defineOrder(n_y, n_u, n_e)
-
 	# Update approximating point
 	# global approxθ = mθ
 
-	# Gradient of f evaluated at mθ
+	# Gradient of function g evaluated at mθ
 	# Jθ = Zygote.gradient(g, mθ, mx, mu, mz, mr)[1]
 	Jθ = g([mx; mu; mz; mr])
 
