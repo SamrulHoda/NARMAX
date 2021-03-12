@@ -12,35 +12,35 @@ Description:
 
     A Nonlinear AutoRegressive model with moving average and exogeneous input (NARMAX)
 
-    y_t = f(y_t-1, …, y_t-n_y, u_t, …, u_t-n_u, e_t, …, e_t-n_e)
+    y_k = fθ(u_k, …, u_k-M1, y_k-1, …, y_k-M2, , e_k, …, e_k-M3)
 
-    where n_y is the number of previous observations, n_u the number of previous inputs 
-    and n_e the number of previous residuals. These histories are stored as the following 
+    where M1 is the number of input delays, M2 the number of output delays
+    and M3 the number of error delays. These histories are stored as the following 
     vectors:
-    - x_t-1 = [y_t-1, …, y_t-n_y]' 
-    - z_t-1 = [u_t-1, …, u_t-n_u]'
-    - r_t-1 = [e_t-1, …, e_t-n_e]'.
+    - x_k-1 = [u_k-1, …, u_k-M1]
+    - z_k-1 = [y_k-1, …, y_k-M2] 
+    - r_k-1 = [e_k-1, …, e_k-M3]
 
-    Assume y_t, x_t-1, u_t, z_t-1 and r_t-1 are observed and e_t ~ N(0, τ^-1).
+    Assume u_k, x_k-1, z_k-1 and r_k-1 are observed and e_k ~ N(0, τ^-1).
 
-    f is assumed to be a linear product of coefficients θ and a basis expansion of inputs, 
-    outputs and residuals ϕ: 
+    !! Currently, fθ is assumed to be a linear product of coefficients θ 
+    and a basis expansion ϕ of inputs, outputs and errors: 
     
-        f(...) = θ'*ϕ(y_t-1, …, y_t-n_y, u_t, …, u_t-n_u, e_t, …, e_t-n_e)
+        fθ(...) = θ'*ϕ(u_k, …, u_k-M1, y_k-1, …, y_k-M2, , e_k, …, e_k-M3)
 
 Interfaces:
 
     1. y (output)
     2. θ (function coefficients)
-    3. x (previous observations vector)
-    4. u (input)
-    5. z (previous inputs vector)
-    6. r (previous residuals)
+    3. u (current input)
+    4. x (previous inputs)
+    5. z (previous outputs)
+    6. r (previous errors)
     7. τ (precision)
 
 Construction:
 
-    NAutoRegressiveMovingAverageX(y, θ, x, u, z, r, τ, g=ϕ, id=:some_id)
+    NAutoRegressiveMovingAverageX(y, θ, u, x, z, r, τ, g=ϕ, id=:some_id)
 """
 
 mutable struct NAutoRegressiveMovingAverageX <: SoftFactor
@@ -48,16 +48,16 @@ mutable struct NAutoRegressiveMovingAverageX <: SoftFactor
     interfaces::Vector{Interface}
     i::Dict{Symbol,Interface}
 
-    g::Function # Scalar function between autoregression coefficients and state variable
+    ϕ::Function # Scalar function between autoregression coefficients and state variable
 
-    function NAutoRegressiveMovingAverageX(y, θ, x, u, z, r, τ; g::Function, id=generateId(NAutoRegressiveMovingAverageX))
+    function NAutoRegressiveMovingAverageX(y, θ, u, x, z, r, τ; ϕ::Function, id=generateId(NAutoRegressiveMovingAverageX))
         @ensureVariables(y, θ, x, u, z, r, τ)
-        self = new(id, Array{Interface}(undef, 7), Dict{Symbol,Interface}(), g)
+        self = new(id, Array{Interface}(undef, 7), Dict{Symbol,Interface}(), ϕ)
         addNode!(currentGraph(), self)
         self.i[:y] = self.interfaces[1] = associate!(Interface(self), y)
         self.i[:θ] = self.interfaces[2] = associate!(Interface(self), θ)
-        self.i[:x] = self.interfaces[3] = associate!(Interface(self), x)
-        self.i[:u] = self.interfaces[4] = associate!(Interface(self), u)
+        self.i[:u] = self.interfaces[3] = associate!(Interface(self), u)
+        self.i[:x] = self.interfaces[4] = associate!(Interface(self), x)
         self.i[:z] = self.interfaces[5] = associate!(Interface(self), z)
         self.i[:r] = self.interfaces[6] = associate!(Interface(self), r)
         self.i[:τ] = self.interfaces[7] = associate!(Interface(self), τ)
@@ -68,11 +68,11 @@ end
 slug(::Type{NAutoRegressiveMovingAverageX}) = "NARMAX"
 
 function averageEnergy(::Type{NAutoRegressiveMovingAverageX},
-                       g::Function,
+                       ϕ::Function,
                        marg_y::ProbabilityDistribution{Univariate},
                        marg_θ::ProbabilityDistribution{Multivariate},
-                       marg_x::ProbabilityDistribution{Multivariate},
                        marg_u::ProbabilityDistribution{Univariate},
+                       marg_x::ProbabilityDistribution{Multivariate},
                        marg_z::ProbabilityDistribution{Multivariate},
                        marg_r::ProbabilityDistribution{Multivariate},
                        marg_τ::ProbabilityDistribution{Univariate})
@@ -80,29 +80,26 @@ function averageEnergy(::Type{NAutoRegressiveMovingAverageX},
     # Extract moments of beliefs
     mθ,Vθ = unsafeMeanCov(marg_θ)
     my = unsafeMean(marg_y)
-    mx = unsafeMean(marg_x)
     mu = unsafeMean(marg_u)
+    mx = unsafeMean(marg_x)
     mz = unsafeMean(marg_z)
     mr = unsafeMean(marg_r)
     mτ = unsafeMean(marg_τ)  
     aτ = marg_τ.params[:a]
     bτ = marg_τ.params[:b]
 
-    # Gradient of f evaluated at mθ
-    # Jθ = Zygote.gradient(g, mθ, mx, mu, mz, mr)[1]
-    Jθ = g([mx; mu; mz; mr])
+    # Basis expansion applied to moments
+    ϕm = ϕ([mu; mx; mz; mr])
 
-    # Evaluate f at mθ
-    fθ = mθ'*Jθ
-
-    return 1/2*log(2*pi) - 1/2*(digamma(aτ)-log(bτ)) + 1/2*mτ*(my^2 - 2*my*fθ + fθ^2 + Jθ'*Vθ*Jθ)
+    # Return E_q -log p(y_k | u_k, .., θ, τ)
+    return 1/2*log(2*pi) - 1/2*(digamma(aτ)-log(bτ)) + 1/2*mτ*(my^2 - 2*my*(mθ'*ϕm) + (mθ'*ϕm)^2 + ϕm'*Vθ*ϕm)
 end
 
 function collectAverageEnergyInbounds(node::NAutoRegressiveMovingAverageX)
     inbounds = Any[]
 
-    # Push function to calling signature (g needs to be defined in user scope)
-    push!(inbounds, Dict{Symbol, Any}(:g => node.g, :keyword => false))
+    # Push function to calling signature (ϕ needs to be defined in user scope)
+    push!(inbounds, Dict{Symbol, Any}(:ϕ => node.ϕ, :keyword => false))
 
     local_edge_to_region = localEdgeToRegion(node)
 
